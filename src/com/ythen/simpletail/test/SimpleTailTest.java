@@ -1,7 +1,6 @@
 package com.ythen.simpletail.test;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -14,8 +13,13 @@ import com.ythen.simpletail.SimpleTail;
 
 public class SimpleTailTest {
 
+	SimpleTail sut;
+	Writer mockWriter;
+	
 	@Before
 	public void setUp() throws Exception {
+		sut = new SimpleTail();
+		mockWriter = mock(Writer.class);
 	}
 
 	@After
@@ -23,12 +27,22 @@ public class SimpleTailTest {
 	}
 
 	@Test
-	public void testPrintLastTenLines() throws IOException {
-		Writer writer = mock(Writer.class);
-		SimpleTail simpleTail = new SimpleTail();
-		simpleTail.tail("test", writer);
+	public void testTailLastTenLines() throws IOException {
+		sut.tail("test", mockWriter);
 		for (int i = 11; i <= 20; i++)
-			verify(writer).write(Integer.toString(i));
+			verify(mockWriter).write(Integer.toString(i));
 	}
 
+	@Test
+	public void testTailZeroLines() throws IOException {
+		sut.tail("test", mockWriter, 0);		
+		verify(mockWriter, never()).write(anyString());
+	}
+	
+	@Test
+	public void testTailOverheadLines() throws IOException {
+		sut.tail("test", mockWriter, 60);
+		for (int i = 1; i <= 20; i++)
+			verify(mockWriter).write(Integer.toString(i));
+	}
 }
