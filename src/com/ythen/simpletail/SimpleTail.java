@@ -8,7 +8,6 @@ import java.io.Writer;
 
 public class SimpleTail {
 	final static long DEFAULT_LINES = 10;
-	final static int BUFFER_SIZE = 1024 * 32;
 
 	public static void main(String[] args) {
 
@@ -73,5 +72,23 @@ public class SimpleTail {
 
 		for (int i = 0; i < lines; i++)
 			writer.write(raf.readLine());
+	}
+
+	public void tailBytes(String fileName, Writer writer, long bytes)
+			throws FileNotFoundException, IOException {
+		this.tailBytes(new File(fileName), writer, bytes);
+	}
+
+	public void tailBytes(File file, Writer writer, long bytes)
+			throws FileNotFoundException, IOException {
+		RandomAccessFile raf = new RandomAccessFile(file, "r");
+
+		long bytesToRead = bytes > raf.length() ? raf.length()  : bytes;
+
+		// Seek to last N - 1 bytes requested.
+		raf.seek(raf.length() - bytesToRead);
+
+		for (int i = 0; i < bytesToRead; i++)
+			writer.write((char) raf.readByte());
 	}
 }
