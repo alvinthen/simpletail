@@ -1,9 +1,9 @@
 package com.ythen.simpletail.test;
 
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.io.Writer;
+import java.io.StringWriter;
 
 import org.junit.After;
 import org.junit.Before;
@@ -14,72 +14,112 @@ import com.ythen.simpletail.SimpleTail;
 public class SimpleTailTest {
 
 	SimpleTail sut;
-	Writer mockWriter;
-	
+	StringWriter writer;
+
 	@Before
 	public void setUp() throws Exception {
 		sut = new SimpleTail();
-		mockWriter = mock(Writer.class);
+		writer = new StringWriter();
 	}
 
 	@After
 	public void tearDown() throws Exception {
+		sut = null;
+		writer.close();
 	}
 
 	@Test
 	public void testTailLastTenLines() throws IOException {
-		sut.tail("test", mockWriter);
-		for (int i = 11; i <= 20; i++)
-			verify(mockWriter).write(Integer.toString(i));
+		sut.tail("test", writer);
+
+		assertEquals("11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n",
+				writer.toString());
 	}
 
 	@Test
 	public void testTailZeroLines() throws IOException {
-		sut.tail("test", mockWriter, 0);		
-		verify(mockWriter, never()).write(anyString());
+		sut.tail("test", writer, 0);
+
+		assertEquals("", writer.toString());
 	}
-	
+
 	@Test
 	public void testTailOverheadLines() throws IOException {
-		sut.tail("test", mockWriter, 60);
-		for (int i = 1; i <= 20; i++)
-			verify(mockWriter).write(Integer.toString(i));
+		sut.tail("test", writer, 60);
+
+		assertEquals(
+				"1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n",
+				writer.toString());
 	}
-	
+
 	@Test
 	public void testTailLastTenBytes() throws IOException {
-		sut.tailBytes("test", mockWriter, 10);
-		
-		// Test result may not be reliable as the order of method calling is not tested.
-		verify(mockWriter, times(4)).write('\n');
-		verify(mockWriter, times(2)).write('1');
-		verify(mockWriter).write('8');
-		verify(mockWriter).write('9');
-		verify(mockWriter).write('2');
-		verify(mockWriter).write('0');
+		sut.tailBytes("test", writer, 10);
+
+		assertEquals("\n18\n19\n20\n", writer.toString());
 	}
-	
+
 	@Test
 	public void testTailZeroBytes() throws IOException {
-		sut.tailBytes("test", mockWriter, 0);		
-		verify(mockWriter, never()).write(anyString());
+		sut.tailBytes("test", writer, 0);
+
+		assertEquals("", writer.toString());
+	}
+
+	@Test
+	public void testTailOverheadBytes() throws IOException {
+		sut.tailBytes("test", writer, 60);
+
+		assertEquals(
+				"1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n",
+				writer.toString());
+	}
+
+	@Test
+	public void testTailLinesStartingFromTenthLine() throws IOException {
+		sut.tailFromLine("test", writer, 10);
+
+		assertEquals("10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n",
+				writer.toString());
+	}
+
+	@Test
+	public void testTailLinesStartingFromFirstLine() throws IOException {
+		sut.tailFromLine("test", writer, 1);
+
+		assertEquals(
+				"1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n",
+				writer.toString());
+	}
+
+	@Test
+	public void testTailLinesStartingFromOverheadLine() throws IOException {
+		sut.tailFromLine("test", writer, 100);
+
+		assertEquals("", writer.toString());
 	}
 	
 	@Test
-	public void testTailOverheadBytes() throws IOException {
-		sut.tailBytes("test", mockWriter, 60);
-		
-		// Test result may not be reliable as the order of method calling is not tested.
-		verify(mockWriter, times(20)).write('\n');
-		verify(mockWriter, times(12)).write('1');
-		verify(mockWriter, times(3)).write('2');
-		verify(mockWriter, times(2)).write('3');
-		verify(mockWriter, times(2)).write('4');
-		verify(mockWriter, times(2)).write('5');
-		verify(mockWriter, times(2)).write('6');
-		verify(mockWriter, times(2)).write('7');
-		verify(mockWriter, times(2)).write('8');
-		verify(mockWriter, times(2)).write('9');
-		verify(mockWriter, times(2)).write('0');
+	public void testTailLinesStartingFromTenthByte() throws IOException {
+		sut.tailFromByte("test", writer, 10);
+
+		assertEquals("\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n",
+				writer.toString());
+	}
+
+	@Test
+	public void testTailLinesStartingFromFirstByte() throws IOException {
+		sut.tailFromByte("test", writer, 1);
+
+		assertEquals(
+				"1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n",
+				writer.toString());
+	}
+
+	@Test
+	public void testTailLinesStartingFromOverheadByte() throws IOException {
+		sut.tailFromByte("test", writer, 100);
+
+		assertEquals("", writer.toString());
 	}
 }
